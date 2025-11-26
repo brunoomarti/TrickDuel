@@ -135,9 +135,16 @@ export default function HomeScreen() {
                         {/* Apenas o raio por cima */}
                         <LightningSingleStraightSplit strokeColor="#ffffff" glowColor="#ffff0066" />
 
-                        <Text className="font-extrabold text-2xl text-purple-900" style={{ position: "absolute" }}>
+                        <Image
+                            source={require("@/assets/images/bobo_da_corte.png")}
+                            alt="Avatar"
+                            resizeMode="cover"
+                            className="h-full w-6/12 left-32"
+                        />
+
+                        {/* <Text className="font-extrabold text-2xl text-purple-900" style={{ position: "absolute" }}>
                             Quick Duel
-                        </Text>
+                        </Text> */}
                     </Center>
                 </Pressable>
             </VStack>

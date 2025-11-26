@@ -3,7 +3,7 @@ import Svg, { Path } from "react-native-svg";
 export function LightningSingleStraightSplit({
     strokeColor = "#FFFFFF",
     glowColor = "#FFFF0088",
-    strokeWidth = 6,
+    strokeWidth = 2,
     angle = -8,
 }) {
     return (
@@ -17,29 +17,15 @@ export function LightningSingleStraightSplit({
                 transform: [{ rotate: `${angle}deg` }],
             }}
         >
-            {/* Glow */}
-            <Path
-                d="
-                    M50 10
-                    L50 40
-                    L48 50
-                    L50 60
-                    L50 90
-                "
-                stroke={glowColor}
-                strokeWidth={strokeWidth + 10}
-                strokeLinecap="round"
-                fill="none"
-            />
 
             {/* Linha principal */}
             <Path
                 d="
-                    M50 10
+                    M63 -10
                     L50 40
-                    L48 50
-                    L50 60
-                    L50 90
+                    L48 48
+                    L50 50
+                    L35 110
                 "
                 stroke={strokeColor}
                 strokeWidth={strokeWidth}
