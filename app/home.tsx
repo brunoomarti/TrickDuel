@@ -3,16 +3,20 @@ import { useRouter } from "expo-router";
 import { useColorScheme, View } from "react-native";
 import { supabase } from "../lib/supabase";
 
-import { VStack } from "@/components/ui/vstack"
-import { HStack } from "@/components/ui/hstack"
-import { Box } from "@/components/ui/box"
-import { Center } from "@/components/ui/center"
-import { Pressable } from "@/components/ui/pressable"
-import { Image } from "@/components/ui/image"
-import { Text } from "@/components/ui/text"
-import { LightningSingleStraightSplit } from "@/components/ui/custom/LightningSplit";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Box } from "@/components/ui/box";
+import { Center } from "@/components/ui/center";
+import { Pressable } from "@/components/ui/pressable";
+import { Image } from "@/components/ui/image";
+import { Text } from "@/components/ui/text";
+import Svg, { Path } from "react-native-svg";
 
-import { PrimaryButton } from "@/components/ui/custom/buttons/primary-button";
+import {
+    LightningSingleStraightSplit,
+    LIGHTNING_FILL_RIGHT_PATH,
+} from "@/components/ui/custom/LightningSplit";
+
 import { RadialRaysBackground } from "@/components/ui/custom/radial-background";
 
 import type { User } from "@supabase/supabase-js";
@@ -25,11 +29,12 @@ type Profile = {
 };
 
 export default function HomeScreen() {
+
     const router = useRouter();
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
-    const [loading, setLoading] = useState(false);
 
+    const [loading, setLoading] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -52,63 +57,24 @@ export default function HomeScreen() {
         });
     }, []);
 
-    async function logout() {
-        if (loading) return;
-
-        try {
-            setLoading(true);
-            await supabase.auth.signOut();
-            router.replace("/(auth)/login");
-        } catch (e) {
-            console.error(e);
-            alert("Não foi possível sair.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
     const infoClasses = isDark
         ? "text-center text-purple-100"
         : "text-center text-slate-800";
 
-    const HEADER_HEIGHT = 140;
-
-    function goToProfile() {
-        // router.push("/profile");
-        return;
-    }
-
     function goToQuickDuel() {
-        // router.push("/profile");
         return;
     }
 
     return (
-        <VStack className="flex-1 justify-between p-6 space-y-6">
+        <VStack className="flex-1 justify-between space-y-6">
 
             <VStack className="flex-1 align-top space-y-6">
+
+                {/* HEADER */}
                 <HStack
-                    className="w-full flex-row items-center justify-between"
+                    className="w-full flex-row items-center p-6 justify-between mt-6"
                     style={{ height: 120 }}
                 >
-
-                    {/* <Pressable onPress={goToProfile}>
-                        <Center className="w-14 h-14 mt-2 rounded-full overflow-hidden bg-gray-300 items-center justify-center">
-                            {profile?.avatar_url ? (
-                                <Image
-                                    source={{ uri: profile.avatar_url }}
-                                    alt="Avatar"
-                                    resizeMode="cover"
-                                    className="w-full h-full"
-                                />
-                            ) : (
-                                <Text className="font-bold text-md">
-                                    {profile?.username?.charAt(0).toUpperCase() ?? "?"}
-                                </Text>
-                            )}
-                        </Center>
-                    </Pressable> */}
-
                     <Box className="w-14 h-14 mt-2" />
 
                     <Center className="flex-1 h-full items-center justify-center">
@@ -121,46 +87,94 @@ export default function HomeScreen() {
                     </Center>
 
                     <Box className="w-14 h-14 mt-2" />
-
                 </HStack>
 
+                {/* CARD */}
                 <Pressable onPress={goToQuickDuel}>
-                    <Center
-                        className="w-full h-36 mt-2 rounded-2xl overflow-hidden items-center justify-center"
-                        style={{ backgroundColor: "#EFBA3C", position: "relative" }}
+
+                    {/* WRAPPER VERMELHO */}
+                    <View
+                        className="relative w-full items-center overflow-hidden"
+                        style={{ height: 150 }}
                     >
-                        {/* Fundo radial continua normal */}
-                        <RadialRaysBackground color="#dba62b" opacity={0.5} rays={32} />
 
-                        {/* Apenas o raio por cima */}
-                        <LightningSingleStraightSplit strokeColor="#ffffff" glowColor="#ffff0066" />
+                        {/* CAVALEIRO */}
+                        <View className="absolute -left-6 -top-6 z-20">
+                            <Image
+                                source={require("@/assets/images/cavaleiro.png")}
+                                resizeMode="contain"
+                                className="w-[180px] h-[220px]"
+                            />
+                        </View>
 
-                        <Image
-                            source={require("@/assets/images/bobo_da_corte.png")}
-                            alt="Avatar"
-                            resizeMode="cover"
-                            className="h-full w-6/12 left-32"
-                        />
+                        {/* BOBO */}
+                        <View className="absolute -right-6 top-2 z-20">
+                            <Image
+                                source={require("@/assets/images/bobo_da_corte.png")}
+                                resizeMode="contain"
+                                className="w-[180px] h-[150px]"
+                            />
+                        </View>
 
-                        {/* <Text className="font-extrabold text-2xl text-purple-900" style={{ position: "absolute" }}>
-                            Quick Duel
-                        </Text> */}
-                    </Center>
+                        <Center
+                            className="absolute bottom-0 w-[92%] h-36 rounded-2xl z-10"
+                            // style={{
+                            //     // sombra iOS
+                            //     shadowColor: "#000",
+                            //     shadowOffset: { width: 0, height: 6 },
+                            //     shadowOpacity: 0.25,
+                            //     shadowRadius: 10,
+                            //     // sombra Android
+                            //     elevation: 10,
+                            // }}
+                        >
+                            <View className="w-full h-full rounded-2xl overflow-hidden relative">
+                                {/* FUNDO AMARELO EM TUDO */}
+                                <View
+                                    className="absolute inset-0"
+                                    style={{ backgroundColor: "#EFBA3C" }}
+                                />
+
+                                {/* FUNDO ROXO ACOPLADO AO RAIO */}
+                                <Svg
+                                    width="100%"
+                                    height="100%"
+                                    viewBox="0 0 100 100"
+                                    preserveAspectRatio="none"
+                                    style={{ position: "absolute" }}
+                                >
+                                    <Path
+                                        d={LIGHTNING_FILL_RIGHT_PATH}
+                                        fill="#7C4BD8"
+                                        opacity={0.9}
+                                    />
+                                </Svg>
+
+                                {/* RADIAL ÚNICO */}
+                                <RadialRaysBackground opacity={0.06} rays={32} />
+
+                                {/* RAIO BRANCO */}
+                                <LightningSingleStraightSplit
+                                    strokeColor="#ffffff"
+                                    glowColor="#ffff0066"
+                                />
+                            </View>
+                        </Center>
+                    </View>
                 </Pressable>
             </VStack>
 
+            {/* INFOS DO PLAYER */}
             {profile && (
                 <>
-                    <Text className={infoClasses}>Jogador: {profile.username}</Text>
-                    <Text className={infoClasses}>XP: {profile.xp}</Text>
+                    <Text className={infoClasses}>
+                        Jogador: {profile.username}
+                    </Text>
+                    <Text className={infoClasses}>
+                        XP: {profile.xp}
+                    </Text>
                 </>
             )}
-
-            {/* <PrimaryButton
-                onPress={logout}
-                loading={loading}
-                label="Sair"
-            /> */}
         </VStack>
     );
 }
