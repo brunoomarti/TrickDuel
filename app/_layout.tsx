@@ -7,21 +7,31 @@ import {
   DefaultTheme as NavDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+
 import { useEffect, useState } from "react";
-import { Slot, usePathname } from "expo-router";
+import { Slot, useRouter, usePathname, Href } from "expo-router";
+
+import { Provider as ReduxProvider } from "react-redux";
+import { store } from "@/store";
+
+import { ApolloProvider } from "@apollo/client/react";
+import { apolloClient } from "@/lib/apolloClient";
+
 import { Fab, FabIcon } from "@/components/ui/fab";
 import { MoonIcon, SunIcon } from "@/components/ui/icon";
 import { View, useColorScheme, StyleSheet } from "react-native";
+
+import { ScreenTransition } from "@/components/ui/custom/screen-transition";
+import type { ReactElement } from "react";
 
 export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 
-// ======================
-// Cores base dos temas
-// ======================
+// Temas
 const LIGHT_BG_COLOR = "#f9f5ff";
 const DARK_BG_COLOR = "#0f051a";
 
@@ -41,9 +51,11 @@ const DarkTheme = {
   },
 };
 
-// ======================
-// 1) Carrega fontes / splash
-// ======================
+// ===========================================================
+//  AQUI: Função global para iniciar transições
+// ===========================================================
+export let startScreenTransition: (preview: ReactElement, route: Href) => void = () => { };
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -55,58 +67,104 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded) return null;
 
   return <RootLayoutNav />;
 }
 
-// ======================
-// 2) Layout com tema customizado + auto dark/light
-// ======================
 function RootLayoutNav() {
+  const router = useRouter();
   const pathname = usePathname();
-  const systemScheme = useColorScheme(); // "light" | "dark" | null
+  const systemScheme = useColorScheme();
 
+  // ===========================================================
+  // Thema
+  // ===========================================================
   const [colorMode, setColorMode] = useState<"light" | "dark">(
-    systemScheme === "dark" || systemScheme === "light"
-      ? systemScheme
-      : "light"
+    systemScheme === "dark" ? "dark" : "light"
   );
 
-  // Sempre que o sistema mudar de tema, sincroniza
   useEffect(() => {
-    if (systemScheme === "dark" || systemScheme === "light") {
-      setColorMode(systemScheme);
-    }
+    if (systemScheme) setColorMode(systemScheme);
   }, [systemScheme]);
 
   const theme = colorMode === "dark" ? DarkTheme : LightTheme;
 
-  const handleToggleColorMode = () => {
-    setColorMode((prev) => (prev === "dark" ? "light" : "dark"));
+  // ===========================================================
+  // Estado da transição
+  // ===========================================================
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [nextScreenPreview, setNextScreenPreview] = useState<ReactElement | null>(null);
+  const [nextRoute, setNextRoute] = useState<Href | null>(null);
+
+  // ===========================================================
+  // Função global usada nas telas
+  // ===========================================================
+  startScreenTransition = (preview: ReactElement, route: Href) => {
+    setNextScreenPreview(preview);   // pré-render da próxima tela
+    setNextRoute(route);             // rota final real
+    setIsTransitioning(true);        // inicia animação
   };
 
   return (
     <GluestackUIProvider mode={colorMode}>
-      <ThemeProvider value={theme}>
-        {/* View raiz estilizada via StyleSheet + cor do tema */}
-        <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
-          <Slot />
+      <ApolloProvider client={apolloClient}>
+        <ReduxProvider store={store}>
+          <ThemeProvider value={theme}>
+            <View
+              style={[
+                styles.root,
+                { backgroundColor: theme.colors.background }
+              ]}
+            >
 
-          {(pathname === "/" || pathname === "/home") && (
-            <Fab onPress={handleToggleColorMode} className="m-6" size="lg">
-              <FabIcon as={colorMode === "dark" ? MoonIcon : SunIcon} />
-            </Fab>
-          )}
-        </View>
-      </ThemeProvider>
+              {/* Tela atual */}
+              <Slot />
+
+              {/* Tela pré-renderizada para a máscara */}
+              {/* {isTransitioning && nextScreenPreview && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                  {nextScreenPreview}
+                </View>
+              )} */}
+
+              {/* Animação de transição */}
+              {isTransitioning && (
+                <ScreenTransition
+                  duration={1400}
+                  color1="#EFBA3C"
+                  color2="#7C4BD8"
+                  onFinish={() => {
+                    if (nextRoute) router.push(nextRoute);
+                    setIsTransitioning(false);
+                    setNextScreenPreview(null);
+                    setNextRoute(null);
+                  }}
+                >
+                  {nextScreenPreview}
+                </ScreenTransition>
+              )}
+
+              {/* Botão de tema somente no home */}
+              {(pathname === "/" || pathname === "/home") && (
+                <Fab
+                  onPress={() =>
+                    setColorMode((prev) => (prev === "dark" ? "light" : "dark"))
+                  }
+                  className="m-6"
+                  size="lg"
+                >
+                  <FabIcon as={colorMode === "dark" ? MoonIcon : SunIcon} />
+                </Fab>
+              )}
+
+            </View>
+          </ThemeProvider>
+        </ReduxProvider>
+      </ApolloProvider>
     </GluestackUIProvider>
   );
 }

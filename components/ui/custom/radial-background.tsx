@@ -8,18 +8,22 @@ type Props = {
     color?: string;
     opacity?: number;
     rays?: number;
+    animate?: boolean;
 };
 
 export function RadialRaysBackground({
     color = "#000000",
     opacity = 0.15,
     rays = 32,
+    animate = true,
 }: Props) {
     const rotateBase = useRef(new Animated.Value(0)).current;
     const rotateLoop = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
+        if (!animate) return;
+
         scale.setValue(0.1);
 
         Animated.timing(scale, {
@@ -45,7 +49,7 @@ export function RadialRaysBackground({
             }),
             { resetBeforeIteration: true }
         ).start();
-    }, [rotateBase, rotateLoop, scale]);
+    }, [animate, rotateBase, rotateLoop, scale]);
 
     const combined = Animated.add(rotateBase, rotateLoop);
 
@@ -53,6 +57,10 @@ export function RadialRaysBackground({
         inputRange: [0, 1],
         outputRange: ["0deg", "360deg"],
     });
+
+    const animatedStyle = animate
+        ? { transform: [{ rotate: spin }, { scale }] }
+        : undefined;
 
     const cx = 50;
     const cy = 50;
@@ -63,7 +71,7 @@ export function RadialRaysBackground({
     for (let i = 0; i < rays; i++) {
         if (i % 2 !== 0) continue;
 
-        const a1 = i * stepAngle;4
+        const a1 = i * stepAngle;
         const a2 = (i + 1) * stepAngle;
 
         const x1 = cx + radius * Math.cos(a1);
@@ -84,34 +92,23 @@ export function RadialRaysBackground({
     return (
         <AnimatedView
             pointerEvents="none"
-            style={[
-                styles.container,
-                {
-                    transform: [{ rotate: spin }, { scale }],
-                },
-            ]}
+            style={[styles.container, animatedStyle]}
         >
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
                 <Defs>
-                    <RadialGradient
-                        id="rayGradient"
-                        cx="50%"
-                        cy="50%"
-                        r="50%"
-                    >
+                    <RadialGradient id="rayGradient" cx="50%" cy="50%" r="50%">
                         <Stop offset="0%" stopColor={color} stopOpacity={0} />
                         <Stop offset="80%" stopColor={color} stopOpacity={opacity * 0.4} />
                         <Stop offset="100%" stopColor={color} stopOpacity={opacity} />
                     </RadialGradient>
                 </Defs>
-
-                {raysElements.map((path, index) =>
+                {raysElements.map((path, index) => (
                     <Path
                         key={index}
                         d={path.props.d}
                         fill="url(#rayGradient)"
                     />
-                )}
+                ))}
             </Svg>
         </AnimatedView>
     );
