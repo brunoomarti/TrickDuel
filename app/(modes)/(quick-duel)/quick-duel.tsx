@@ -90,6 +90,14 @@ export default function QuickDuelScreen() {
 
     useEffect(() => {
         dispatch(resetGame());
+
+        setCurrentIndex(0);
+        setSelectedAnswerId(null);
+        setOpponentSelectedId(null);
+        pendingFinishRef.current = false;
+        setLastAnswerCommitted(false);
+
+        setPlayerHistory([]);
     }, [dispatch]);
 
     useEffect(() => {
@@ -165,7 +173,7 @@ export default function QuickDuelScreen() {
         playerAccuracy,
         enabled: iaEnabled,
         onAIAnswer: ({ aiAnswer, aiCorrect, aiTime }) => {
-            if (opponentSelectedId || selectedAnswerId) return;
+            if (opponentSelectedId) return;
 
             setOpponentSelectedId(aiAnswer.id);
 
