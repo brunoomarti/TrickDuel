@@ -1,16 +1,30 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {
+    View,
+    Text,
+    StyleSheet,
+    ViewStyle,
+    TextStyle,
+} from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import MaskedView from "@react-native-masked-view/masked-view";
-import { COLORS } from "@/theme/colors";
 
 export type StepType = "completed" | "current" | "next";
 
 interface StepProps {
     type: StepType;
     children: React.ReactNode;
-    /** 0 → 1, usado só para o step "current" */
     progress?: number;
+
+    colorCompleted?: string; // preenchimento do completed
+    colorCurrent?: string;   // base do current (cinza)
+    colorNext?: string;      // borda do next
+
+    textColor?: string;          // texto padrão
+    overlayTextColor?: string;   // texto do current (branco)
+
+    style?: ViewStyle;
+    textStyle?: TextStyle;
 }
 
 const SIZE = 32;
@@ -18,14 +32,9 @@ const RADIUS = SIZE / 2;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
 
-/**
- * Gera um path de "fatia" de pizza (wedge) de 0 a angleDeg graus,
- * começando do topo e indo no sentido horário.
- */
 function createWedgePath(progress: number): string | null {
     if (progress <= 0) return null;
     if (progress >= 1) {
-        // path de círculo cheio
         return `
             M ${CX} ${CY}
             m 0 -${RADIUS}
@@ -35,9 +44,8 @@ function createWedgePath(progress: number): string | null {
         `;
     }
 
-    const startAngle = -90; // começa no topo
+    const startAngle = -90;
     const endAngle = startAngle + progress * 360;
-
     const rad = (deg: number) => (deg * Math.PI) / 180;
 
     const x1 = CX + RADIUS * Math.cos(rad(startAngle));
@@ -55,77 +63,82 @@ function createWedgePath(progress: number): string | null {
     `;
 }
 
-export function Step({ type, children, progress }: StepProps) {
-    // Progresso só importa para o step atual
+export function Step({
+    type,
+    children,
+    progress = 0,
+
+    colorCompleted = "#9CA3AF",
+    colorCurrent = "#E5E7EB",
+    colorNext = "#9CA3AF",
+
+    textColor = "#111827",
+    overlayTextColor = "#FFFFFF",
+
+    style,
+    textStyle,
+}: StepProps) {
     const normalizedProgress =
-        type === "current"
-            ? Math.max(0, Math.min(1, progress ?? 0))
-            : 0;
+        type === "current" ? Math.min(1, Math.max(0, progress)) : 0;
 
     const wedgePath = createWedgePath(normalizedProgress);
-    const hasWedge = !!wedgePath;
 
-    // Circle base
-    let circleFill = "transparent";
-    let circleStroke = "#9CA3AF"; // cinza
-    let circleStrokeWidth = 2;
-
-    if (type === "completed") {
-        circleFill = "#9CA3AF"; // cinza cheio
-        circleStrokeWidth = 0;
-    } else if (type === "current") {
-        circleFill = "#E5E7EB"; // cinza clarinho de fundo
-        circleStrokeWidth = 0;
-    } else if (type === "next") {
-        circleFill = "transparent";
-        circleStroke = "#9CA3AF";
-        circleStrokeWidth = 2;
-    }
+    // Texto: current sempre branco
+    const finalTextColor = type === "current" ? overlayTextColor : textColor;
 
     return (
-        <View style={styles.container}>
-            {/* Base: círculo + wedge roxo */}
-            <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-                {/* círculo base */}
+        <View style={[styles.container, style]}>
+            {/* BASE DO CÍRCULO */}
+            <Svg width={SIZE} height={SIZE}>
                 <Circle
                     cx={CX}
                     cy={CY}
-                    r={RADIUS - circleStrokeWidth / 2}
-                    fill={circleFill}
-                    stroke={circleStroke}
-                    strokeWidth={circleStrokeWidth}
+                    r={RADIUS}
+                    fill={
+                        type === "completed"
+                            ? colorCompleted
+                            : type === "current"
+                                ? colorCurrent
+                                : "transparent"
+                    }
+                    stroke={type === "next" ? colorNext : "transparent"}
+                    strokeWidth={type === "next" ? 2 : 0}
                 />
-
-                {/* wedge roxo apenas para o "current" */}
-                {type === "current" && hasWedge && (
-                    <Path d={wedgePath!} fill={COLORS.secondaryColor} />
-                )}
             </Svg>
 
-            {/* Número base (preto) */}
-            <View style={styles.numberLayer}>
-                <Text style={styles.numberTextBase}>{children}</Text>
-            </View>
-
-            {/* Número branco apenas onde o wedge cobre (máscara) */}
-            {type === "current" && hasWedge && (
+            {/* WEDGE (roxo) aplicado NA BOLA */}
+            {type === "current" && wedgePath && (
                 <MaskedView
-                    style={styles.maskedLayer}
+                    style={StyleSheet.absoluteFill}
                     maskElement={
-                        <Svg
-                            width={SIZE}
-                            height={SIZE}
-                            viewBox={`0 0 ${SIZE} ${SIZE}`}
-                        >
-                            <Path d={wedgePath!} fill="white" />
+                        <Svg width={SIZE} height={SIZE}>
+                            <Path d={wedgePath} fill="white" />
                         </Svg>
                     }
                 >
-                    <View style={styles.numberLayer}>
-                        <Text style={styles.numberTextOverlay}>{children}</Text>
-                    </View>
+                    <Svg width={SIZE} height={SIZE}>
+                        <Circle
+                            cx={CX}
+                            cy={CY}
+                            r={RADIUS}
+                            fill={colorCompleted}
+                        />
+                    </Svg>
                 </MaskedView>
             )}
+
+            {/* TEXTO (current sempre branco) */}
+            <View style={styles.numberLayer}>
+                <Text
+                    style={[
+                        styles.numberText,
+                        { color: finalTextColor },
+                        textStyle,
+                    ]}
+                >
+                    {children}
+                </Text>
+            </View>
         </View>
     );
 }
@@ -142,17 +155,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    maskedLayer: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    numberTextBase: {
-        fontWeight: "bold",
+    numberText: {
         fontSize: 14,
-        color: "#111827", // preto
-    },
-    numberTextOverlay: {
         fontWeight: "bold",
-        fontSize: 14,
-        color: "#ffffff", // branco
     },
 });

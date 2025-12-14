@@ -1,8 +1,9 @@
 import React from "react";
-import { View, ImageSourcePropType } from "react-native";
+import { View, ImageSourcePropType, useColorScheme } from "react-native";
 import { Center } from "@/components/ui/center";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
+import { COLORS } from "@/theme/colors";
 
 type QuestionCardProps = {
     text: React.ReactNode;
@@ -17,15 +18,21 @@ export function QuestionCard({
     timeLeftSeconds,
     timeTotalSeconds,
 }: QuestionCardProps) {
+    const scheme = useColorScheme();
+    const theme = COLORS[scheme ?? "light"];
+
     const showTimer =
-        typeof timeLeftSeconds === "number" && typeof timeTotalSeconds === "number";
+        typeof timeLeftSeconds === "number" &&
+        typeof timeTotalSeconds === "number";
 
     return (
         <Center
-            className="w-full p-6 rounded-2xl"
-            style={{ backgroundColor: "white", flex: 1 }}
+            className="w-full p-6 rounded-2xl flex-1"
+            style={{ backgroundColor: theme.cardBackground }}
         >
-            <View className="w-full h-full justify-center items-center gap-4">
+            <View
+                className="w-full h-full justify-center items-center gap-4"
+            >
                 {imageSource && (
                     <Image
                         source={imageSource}
@@ -36,13 +43,19 @@ export function QuestionCard({
                 )}
 
                 <View className="w-full items-center">
-                    <Text className="text-2xl text-center leading-snug">
+                    <Text
+                        className="text-2xl text-center leading-snug"
+                        style={{ color: theme.textPrimary }}
+                    >
                         {text}
                     </Text>
                 </View>
 
                 {showTimer && (
-                    <Text className="text-xs mt-2">
+                    <Text
+                        className="text-xs mt-2"
+                        style={{ color: theme.textSecondary }}
+                    >
                         {timeLeftSeconds!.toString().padStart(2, "0")}s /{" "}
                         {timeTotalSeconds!.toString().padStart(2, "0")}s
                     </Text>

@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -26,6 +25,7 @@ import { View, useColorScheme, StyleSheet } from "react-native";
 
 import { ScreenTransition } from "@/components/ui/custom/screen-transition";
 import type { ReactElement } from "react";
+import * as Notifications from "expo-notifications";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -51,9 +51,6 @@ const DarkTheme = {
   },
 };
 
-// ===========================================================
-//  AQUI: Função global para iniciar transições
-// ===========================================================
 export let startScreenTransition: (preview: ReactElement, route: Href) => void = () => { };
 
 export default function RootLayout() {
@@ -75,14 +72,20 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+Notifications.setNotificationHandler({
+  handleNotification: async (): Promise<Notifications.NotificationBehavior> => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 function RootLayoutNav() {
   const router = useRouter();
   const pathname = usePathname();
   const systemScheme = useColorScheme();
 
-  // ===========================================================
-  // Thema
-  // ===========================================================
   const [colorMode, setColorMode] = useState<"light" | "dark">(
     systemScheme === "dark" ? "dark" : "light"
   );
@@ -91,22 +94,27 @@ function RootLayoutNav() {
     if (systemScheme) setColorMode(systemScheme);
   }, [systemScheme]);
 
+  useEffect(() => {
+    async function requestNotificationPermission() {
+      const { status } = await Notifications.getPermissionsAsync();
+
+      if (status !== "granted") {
+        await Notifications.requestPermissionsAsync();
+      }
+    }
+    requestNotificationPermission();
+  }, []);
+
   const theme = colorMode === "dark" ? DarkTheme : LightTheme;
 
-  // ===========================================================
-  // Estado da transição
-  // ===========================================================
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextScreenPreview, setNextScreenPreview] = useState<ReactElement | null>(null);
   const [nextRoute, setNextRoute] = useState<Href | null>(null);
 
-  // ===========================================================
-  // Função global usada nas telas
-  // ===========================================================
   startScreenTransition = (preview: ReactElement, route: Href) => {
-    setNextScreenPreview(preview);   // pré-render da próxima tela
-    setNextRoute(route);             // rota final real
-    setIsTransitioning(true);        // inicia animação
+    setNextScreenPreview(preview);
+    setNextRoute(route);
+    setIsTransitioning(true);
   };
 
   return (
@@ -121,17 +129,8 @@ function RootLayoutNav() {
               ]}
             >
 
-              {/* Tela atual */}
               <Slot />
 
-              {/* Tela pré-renderizada para a máscara */}
-              {/* {isTransitioning && nextScreenPreview && (
-                <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                  {nextScreenPreview}
-                </View>
-              )} */}
-
-              {/* Animação de transição */}
               {isTransitioning && (
                 <ScreenTransition
                   duration={1400}

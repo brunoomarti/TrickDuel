@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { View, Animated, Easing } from "react-native";
+import { View, Animated, Easing, useColorScheme } from "react-native";
 import { Pressable } from "@/components/ui/pressable";
 import { Center } from "@/components/ui/center";
 import { Image } from "@/components/ui/image";
@@ -15,9 +15,12 @@ import {
 } from "@/components/ui/custom/LightningSplit";
 
 import { RadialRaysBackground } from "@/components/ui/custom/radial-background";
-
+import { COLORS } from "@/theme/colors";
 
 export function QuickDuelCard() {
+    const scheme = useColorScheme();
+    const theme = COLORS[scheme ?? "light"];
+
     const knightY = useRef(new Animated.Value(220)).current;
     const jesterY = useRef(new Animated.Value(220)).current;
     const titleY = useRef(new Animated.Value(220)).current;
@@ -28,7 +31,6 @@ export function QuickDuelCard() {
 
     const [measured, setMeasured] = useState(false);
     const [contentHeight, setContentHeight] = useState(0);
-
 
     function startIntroAnimations() {
         Animated.spring(knightY, {
@@ -61,7 +63,6 @@ export function QuickDuelCard() {
         startIntroAnimations();
     });
 
-
     function toggle() {
         if (!measured) return;
 
@@ -86,11 +87,17 @@ export function QuickDuelCard() {
         ]).start();
     }
 
-
     function goToQuickDuel() {
-        startScreenTransition(<QuickDuelScreen />, "/quick-duel");
+        startScreenTransition(
+            (
+                <View
+                    className="flex-1 items-center justify-center"
+                    style={{ backgroundColor: COLORS.primaryColor }}
+                >
+                </View>
+            ),
+            "/quick-duel");
     }
-
 
     return (
         <>
@@ -141,11 +148,13 @@ export function QuickDuelCard() {
                     <Center className="absolute bottom-0 w-[90%] h-36 rounded-2xl z-10">
                         <View className="w-full h-full rounded-2xl overflow-hidden relative">
 
+                            {/* Fundo principal */}
                             <View
                                 className="absolute inset-0"
-                                style={{ backgroundColor: "#EFBA3C" }}
+                                style={{ backgroundColor: COLORS.primaryColor }}
                             />
 
+                            {/* Lightning preenchendo lateral */}
                             <Svg
                                 width="100%"
                                 height="100%"
@@ -155,16 +164,15 @@ export function QuickDuelCard() {
                             >
                                 <Path
                                     d={LIGHTNING_FILL_RIGHT_PATH}
-                                    fill="#7C4BD8"
-                                    opacity={0.9}
+                                    fill={COLORS.secondaryColor}
                                 />
                             </Svg>
 
                             <RadialRaysBackground opacity={0.06} rays={32} />
 
                             <LightningSingleStraightSplit
-                                strokeColor="#ffffff"
-                                glowColor="#ffff0066"
+                                strokeColor={theme.background}
+                                glowColor={theme.glow}
                             />
                         </View>
                     </Center>
@@ -178,7 +186,7 @@ export function QuickDuelCard() {
                     overflow: "hidden",
                     marginTop: marginAnim,
                     marginHorizontal: 21,
-                    backgroundColor: "#EDEDED",
+                    backgroundColor: theme.cardBackground,
                     height: measured ? heightAnim : undefined,
                     opacity: measured ? 1 : 0,
                 }}
@@ -194,28 +202,43 @@ export function QuickDuelCard() {
                         }
                     }}
                 >
-                    <Text className="text-xl font-bold mb-3 text-center">
+                    <Text
+                        className="text-xl font-bold mb-3 text-center"
+                        style={{ color: theme.textPrimary }}
+                    >
                         Iniciar duelo rápido?
                     </Text>
 
                     <View className="flex-row justify-between mt-2">
+
+                        {/* Botão OK */}
                         <Pressable
                             onPress={goToQuickDuel}
-                            className="flex-1 bg-purple-600 rounded-lg p-3 mr-2"
+                            className="flex-1 rounded-lg p-3 mr-2"
+                            style={{ backgroundColor: theme.accent }}
                         >
-                            <Text className="text-center text-white font-bold">
+                            <Text
+                                className="text-center font-bold"
+                                style={{ color: 'white' }}
+                            >
                                 Vamos lá!
                             </Text>
                         </Pressable>
 
+                        {/* Botão CANCELAR */}
                         <Pressable
                             onPress={toggle}
-                            className="flex-1 bg-gray-600 rounded-lg p-3 ml-2"
+                            className="flex-1 rounded-lg p-3 ml-2"
+                            style={{ backgroundColor: theme.textSecondary }}
                         >
-                            <Text className="text-center text-white font-bold">
+                            <Text
+                                className="text-center font-bold"
+                                style={{ color: theme.background }}
+                            >
                                 Agora não
                             </Text>
                         </Pressable>
+
                     </View>
                 </View>
             </Animated.View>

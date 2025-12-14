@@ -7,6 +7,7 @@ import {
     ViewStyle,
 } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
+import { COLORS } from "@/theme/colors";
 
 type PrimaryButtonProps = {
     onPress?: () => void | Promise<void>;
@@ -35,10 +36,11 @@ export function PrimaryButton({
     return (
         <Button
             onPress={isButtonDisabled ? undefined : onPress}
-            className={`bg-purple-900 rounded-2xl ${className}`}
+            className={`rounded-2xl ${className}`}
             style={[
                 styles.primaryButton,
                 loading && styles.primaryButtonLoading,
+                { backgroundColor: COLORS.secondaryColor },
                 style,
             ]}
             isDisabled={isButtonDisabled}

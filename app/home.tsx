@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "react-native";
+import {
+    useColorScheme,
+    ScrollView,
+    Animated,
+    SafeAreaView,
+} from "react-native";
+import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { supabase } from "../lib/supabase";
 
 import { VStack } from "@/components/ui/vstack";
@@ -13,7 +19,12 @@ import { Text } from "@/components/ui/text";
 import { PartidasList } from "@/components/ui/custom/partidas-list";
 import { QuickDuelCard } from "@/components/ui/custom/quick-duel-card";
 
+import { COLORS } from "@/theme/colors";
+
 import type { User } from "@supabase/supabase-js";
+
+import { BackHandler } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Profile = {
     id: string;
@@ -22,13 +33,35 @@ type Profile = {
     xp: number;
 };
 
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+const AnimatedHStack = Animated.createAnimatedComponent(HStack);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
 export default function HomeScreen() {
     const router = useRouter();
     const scheme = useColorScheme();
-    const isDark = scheme === "dark";
+    const theme = COLORS[scheme ?? "light"];
 
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<Profile | null>(null);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                BackHandler.exitApp();
+                return true;
+            };
+
+            const sub = BackHandler.addEventListener(
+                "hardwareBackPress",
+                onBackPress
+            );
+
+            return () => sub.remove();
+        }, [])
+    );
 
     useEffect(() => {
         supabase.auth.getUser().then(async ({ data }) => {
@@ -49,45 +82,129 @@ export default function HomeScreen() {
         });
     }, []);
 
-    const infoClasses = isDark
-        ? "text-center text-purple-100"
-        : "text-center text-slate-800";
+    const headerHeight = scrollY.interpolate({
+        inputRange: [0, 80],
+        outputRange: [130, 80],
+        extrapolate: "clamp",
+    });
+
+    const headerPaddingTop = scrollY.interpolate({
+        inputRange: [0, 80],
+        outputRange: [42, 22],
+        extrapolate: "clamp",
+    });
+
+    const logoScale = scrollY.interpolate({
+        inputRange: [0, 80],
+        outputRange: [1, 0.6],
+        extrapolate: "clamp",
+    });
+
+    const shadowOpacity = scrollY.interpolate({
+        inputRange: [0, 10],
+        outputRange: [0, 0.25],
+        extrapolate: "clamp",
+    });
+
+    const shadowRadius = scrollY.interpolate({
+        inputRange: [0, 10],
+        outputRange: [0, 6],
+        extrapolate: "clamp",
+    });
+
+    const shadowElevation = scrollY.interpolate({
+        inputRange: [0, 10],
+        outputRange: [0, 8],
+        extrapolate: "clamp",
+    });
+
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        // espaço pra lógica extra se você quiser no futuro
+    };
 
     return (
-        <VStack className="flex-1 justify-between space-y-6">
-
-            <VStack className="flex-1 align-top space-y-6">
-
-                <HStack
-                    className="w-full flex-row items-center p-6 justify-between mt-6"
-                    style={{ height: 120 }}
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: theme.background,
+            }}
+        >
+            <VStack className="flex-1">
+                <AnimatedHStack
+                    className="w-full flex-row items-center justify-between"
+                    style={[
+                        {
+                            height: headerHeight,
+                            paddingHorizontal: 24,
+                            paddingTop: headerPaddingTop,
+                            paddingBottom: 10,
+                            backgroundColor: theme.backgroundHeader,
+                            zIndex: 10,
+                        },
+                        {
+                            elevation: shadowElevation,
+                            shadowColor: theme.shadowColor,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: shadowOpacity,
+                            shadowRadius: shadowRadius,
+                        },
+                    ]}
                 >
-                    <Box className="w-14 h-14 mt-2" />
+                    <Box className="w-10 h-10" />
 
                     <Center className="flex-1 h-full items-center justify-center">
-                        <Image
+                        <AnimatedImage
                             source={require("@/assets/images/titulo_logo.png")}
+                            className="h-full w-2/3"
                             alt="AltLogo"
                             resizeMode="contain"
-                            className="h-full w-4/6"
+                            style={{
+                                transform: [{ scale: logoScale }],
+                            }}
                         />
                     </Center>
 
-                    <Box className="w-14 h-14 mt-2" />
-                </HStack>
+                    <Box className="w-10 h-10" />
+                </AnimatedHStack>
 
-                <QuickDuelCard />
+                <AnimatedScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                        paddingBottom: 24,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        {
+                            useNativeDriver: false,
+                            listener: handleScroll,
+                        }
+                    )}
+                    scrollEventThrottle={16}
+                >
+                    <VStack className="flex-1 align-top">
+                        <QuickDuelCard />
+                        {user && <PartidasList userId={user.id} />}
+                    </VStack>
+                </AnimatedScrollView>
 
-                {user && <PartidasList userId={user.id} />}
+                {profile && (
+                    <VStack className="pb-4 space-y-1">
+                        <Text
+                            className="text-center"
+                            style={{ color: theme.accent }}
+                        >
+                            Jogador: {profile.username}
+                        </Text>
+                        <Text
+                            className="text-center"
+                            style={{ color: theme.textSecondary }}
+                        >
+                            XP: {profile.xp}
+                        </Text>
+                    </VStack>
+                )}
             </VStack>
-
-            {profile && (
-                <>
-                    <Text className={infoClasses}>Jogador: {profile.username}</Text>
-                    <Text className={infoClasses}>XP: {profile.xp}</Text>
-                </>
-            )}
-
-        </VStack>
+        </SafeAreaView>
     );
 }

@@ -30,6 +30,16 @@ export default function Register() {
     async function handleRegister() {
         if (loading) return;
 
+        if (!email || !senha || !username) {
+            alert("Preencha todos os campos.");
+            return;
+        }
+
+        if (senha.length < 6) {
+            alert("A senha deve ter ao menos 6 caracteres.");
+            return;
+        }
+
         try {
             setLoading(true);
 

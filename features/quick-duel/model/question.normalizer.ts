@@ -17,9 +17,13 @@ export function normalizeQuestions(
             text: htmlToPlainText(rawHtml),
             textHtml: rawHtml,
             imageSource: p.imagem?.url ? { uri: p.imagem.url } : undefined,
+
             timeLimit: p.tempoLimite ?? fallbackTime,
+
             tipo: p.tipo ?? "NORMAL",
             dica: p.dica ?? null,
+
+            dificuldade: p.dificuldade ?? "facil",
 
             answers: shuffleArray(
                 (p.alternativa ?? []).map((a) => ({

@@ -6,6 +6,7 @@ export type PerguntaAPI = {
     tempoLimite?: number | null;
     tipo?: string | null;
     dica?: string | null;
+    dificuldade?: string | null;
     imagem?: { url?: string | null } | null;
     alternativa?: {
         id: string;
@@ -23,6 +24,7 @@ export type Question = {
 
     tipo: string;
     dica: string | null;
+    dificuldade: string;
 
     answers: {
         id: string;
@@ -30,3 +32,4 @@ export type Question = {
         isCorrect: boolean;
     }[];
 };
+
