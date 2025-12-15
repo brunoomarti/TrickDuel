@@ -27,6 +27,8 @@ import { ScreenTransition } from "@/components/ui/custom/screen-transition";
 import type { ReactElement } from "react";
 import * as Notifications from "expo-notifications";
 
+import { OTAUpdater } from "@/features/OTAUpdater";
+
 export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
@@ -119,6 +121,7 @@ function RootLayoutNav() {
 
   return (
     <GluestackUIProvider mode={colorMode}>
+      <OTAUpdater />
       <ApolloProvider client={apolloClient}>
         <ReduxProvider store={store}>
           <ThemeProvider value={theme}>

@@ -139,7 +139,15 @@ export function useAIOpponent({
         }, timeToAnswer * 1000);
 
         return () => clearTimeout(timeout);
-    }, [question?.id, enabled, difficulty, aiProfile, playerAvgTime]);
+    }, [
+        question,
+        enabled,
+        difficulty,
+        aiProfile,
+        playerAvgTime,
+        playerAccuracy,
+        onAIAnswer,
+    ]);
 
     return {
         aiThinking,
