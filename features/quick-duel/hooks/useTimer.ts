@@ -7,17 +7,21 @@ export function useTimer(
     resetKey: any
 ) {
     const [timeLeft, setTimeLeft] = useState(timeLimit);
+    const [elapsed, setElapsed] = useState(0);
     const [progress, setProgress] = useState(0);
 
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const startedAtRef = useRef<number | null>(null);
     const onFinishRef = useRef(onFinish);
+
     useEffect(() => {
         onFinishRef.current = onFinish;
     }, [onFinish]);
 
     useEffect(() => {
+        // cleanup
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -29,35 +33,35 @@ export function useTimer(
 
         if (!active) return;
 
+        startedAtRef.current = Date.now();
+        setElapsed(0);
         setTimeLeft(timeLimit);
         setProgress(0);
 
-        const startedAt = Date.now();
-
         intervalRef.current = setInterval(() => {
-            const elapsed = (Date.now() - startedAt) / 1000;
-            const remaining = Math.max(timeLimit - elapsed, 0);
-            const pct = Math.min(elapsed / timeLimit, 1);
+            if (!startedAtRef.current) return;
 
-            setTimeLeft(Math.round(remaining));
-            setProgress(pct);
-        }, 100);
+            const e = (Date.now() - startedAtRef.current) / 1000;
+            const rem = Math.max(timeLimit - e, 0);
+
+            setElapsed(e);
+            setTimeLeft(rem);
+            setProgress(Math.min(e / Math.max(timeLimit, 0.0001), 1));
+        }, 50);
 
         timeoutRef.current = setTimeout(() => {
             onFinishRef.current?.();
-        }, timeLimit * 1000);
+        }, Math.max(0, timeLimit) * 1000);
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-                timeoutRef.current = null;
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            intervalRef.current = null;
+            timeoutRef.current = null;
         };
     }, [active, timeLimit, resetKey]);
 
-    return { timeLeft, progress };
+    const timeLeftInt = Math.ceil(timeLeft);
+
+    return { timeLeft, timeLeftInt, elapsed, progress, startedAtRef };
 }

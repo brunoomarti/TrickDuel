@@ -150,6 +150,7 @@ export default function QuickDuelScreen() {
     const playerScore = playerHistory.filter((h) => h.correct).length;
     const aiScore = aiResults.filter((r) => r.correct).length;
     const boboIsWinning = aiScore > playerScore;
+    const questionStartMsRef = useRef<number>(0);
 
     async function sendAIEvent(params: { correct: boolean; answerTime: number }) {
         if (!current || !current.id || !userId) return;
@@ -187,7 +188,13 @@ export default function QuickDuelScreen() {
                     registerAIAnswer({
                         questionId: q.id,
                         correct: aiCorrect,
-                        timeSpent: aiTime,
+                        timeSpent:
+                            q.tipo === "memoria"
+                                ? Math.min(
+                                    q.timeLimit,
+                                    Math.max(0, +((Date.now() - questionStartMsRef.current) / 1000).toFixed(2))
+                                )
+                                : aiTime,
                     })
                 );
             }
@@ -275,6 +282,7 @@ export default function QuickDuelScreen() {
 
     useEffect(() => {
         if (current && started) {
+            questionStartMsRef.current = Date.now();
             dispatch(startQuestion());
         }
     }, [currentIndex, started, current, dispatch]);
@@ -405,7 +413,7 @@ export default function QuickDuelScreen() {
 
                                 const answerTime =
                                     typeof progress === "number"
-                                        ? current.timeLimit - Math.floor(current.timeLimit * progress)
+                                        ? Math.min(current.timeLimit, Math.max(0, +(current.timeLimit * progress).toFixed(2)))
                                         : current.timeLimit;
 
                                 await commitFinish({
