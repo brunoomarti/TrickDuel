@@ -43,28 +43,20 @@ export default function Register() {
         try {
             setLoading(true);
 
-            const { data, error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signUp({
                 email,
                 password: senha,
+                options: {
+                    data: {
+                        username,
+                    },
+                },
             });
 
             if (error) {
                 alert(error.message);
                 return;
             }
-
-            const user = data.user;
-            if (!user) {
-                alert("Erro ao criar usuário. Tente novamente.");
-                return;
-            }
-
-            await supabase.from("profiles").insert({
-                id: user.id,
-                username,
-                avatar_url: "",
-                xp: 0,
-            });
 
             router.replace("/home");
         } catch (e) {
@@ -74,6 +66,7 @@ export default function Register() {
             setLoading(false);
         }
     }
+
 
     const titleClasses = isDark
         ? "text-white text-3xl font-bold text-center"
