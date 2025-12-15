@@ -99,7 +99,7 @@ export default function HomeScreen() {
 
     const headerPaddingTop = scrollY.interpolate({
         inputRange: [0, 80],
-        outputRange: [56, 42],
+        outputRange: [42, 28],
         extrapolate: "clamp",
     });
 
@@ -140,7 +140,7 @@ export default function HomeScreen() {
         >
             <VStack className="flex-1">
                 <AnimatedHStack
-                    className="w-full relative"
+                    className="w-full relative flex-row items-center"
                     style={[
                         {
                             height: headerHeight,
@@ -159,10 +159,12 @@ export default function HomeScreen() {
                         },
                     ]}
                 >
-                    <Center className="absolute inset-0 items-center justify-center">
+                    <Box className="w-10" />
+
+                    <Center className="flex-1 items-center justify-center">
                         <AnimatedImage
                             source={require("@/assets/images/titulo_logo.png")}
-                            className="h-full w-2/4"
+                            className="h-full w-2/3"
                             alt="AltLogo"
                             resizeMode="contain"
                             style={{
@@ -171,17 +173,21 @@ export default function HomeScreen() {
                         />
                     </Center>
 
-                    <Box className="absolute right-6 top-0 bottom-0 justify-center">
+                    <Box className="w-10 items-end justify-center">
                         <Button
                             onPress={handleLogout}
-                            className="h-8 w-10 rounded-xl p-0 items-center justify-center bg-red-600 active:bg-red-700"
+                            className="h-8 w-10 rounded-xl p-0 items-center justify-center"
+                            style={{
+                                backgroundColor:
+                                    scheme === "dark"
+                                        ? "rgba(239, 68, 68, 0.75)"
+                                        : "rgba(220, 38, 38, 0.85)",
+                            }}
                         >
                             <MaterialIcons name="logout" size={18} color="#fff" />
                         </Button>
                     </Box>
-
                 </AnimatedHStack>
-
 
                 <AnimatedScrollView
                     style={{ flex: 1 }}
