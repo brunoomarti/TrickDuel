@@ -17,6 +17,7 @@ type Partida = {
     data_partida: string;
     user_time_total?: number | null;
     ai_time_total?: number | null;
+    xp_ganho?: number | null;
 };
 
 export function PartidasList({ userId }: Props) {
@@ -56,6 +57,7 @@ export function PartidasList({ userId }: Props) {
                 data_partida: String(p.created_at ?? ""),
                 user_time_total: p.user_time_total ?? null,
                 ai_time_total: p.ai_time_total ?? null,
+                xp_ganho: p.xp_gained ?? null,
             }));
 
             setPartidas(prev =>
@@ -219,7 +221,7 @@ export function PartidasList({ userId }: Props) {
 
                                     {isVitoria && (
                                         <View
-                                            className="mt-3 h-8 w-full rounded-md flex-row items-center justify-center"
+                                            className="mt-3 h-8 w-full rounded-md flex-row items-center px-3 gap-2 justify-center"
                                             style={{
                                                 backgroundColor: `${COLORS.primaryColor}22`,
                                                 borderWidth: 1,
@@ -234,6 +236,12 @@ export function PartidasList({ userId }: Props) {
                                             >
                                                 🏆 Vitória
                                             </Text>
+
+                                            {!!p.xp_ganho && p.xp_ganho > 0 && (
+                                                <Text className="text-[12px] font-semibold text-black/55 dark:text-[#FFF7D6]/65">
+                                                    +{p.xp_ganho} XP
+                                                </Text>
+                                            )}
                                         </View>
                                     )}
 

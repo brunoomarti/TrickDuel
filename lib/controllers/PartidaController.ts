@@ -3,16 +3,15 @@ import { supabase } from "@/lib/supabase";
 type SaveQuickDuelPayload = {
     userId: string;
 
-    // placar
     userScore: number;
     aiScore: number;
 
-    // tempo (segundos)
     userTimeTotal: number;
     aiTimeTotal: number;
 
-    // resultado final
     result: "vitória" | "derrota" | "empate";
+
+    xpGained: number;
 };
 
 export const PartidaController = {
@@ -24,6 +23,7 @@ export const PartidaController = {
             userTimeTotal,
             aiTimeTotal,
             result,
+            xpGained,
         } = payload;
 
         const { data: partida, error: partidaError } = await supabase
@@ -56,6 +56,8 @@ export const PartidaController = {
             throw profileError;
         }
 
+        const safeXp = result === "derrota" ? 0 : Math.max(0, Math.floor(xpGained || 0));
+
         const { error: historyError } = await supabase
             .from("ai_matches_history")
             .insert({
@@ -73,12 +75,20 @@ export const PartidaController = {
                 ia_level_medium: profile?.level_medium ?? null,
                 ia_level_hard: profile?.level_hard ?? null,
 
+                xp_gained: safeXp,
                 created_at: new Date().toISOString(),
             });
 
         if (historyError) {
             console.error("Erro ao salvar histórico:", historyError);
             throw historyError;
+        }
+
+        if (safeXp > 0) {
+            const { error: xpErr } = await supabase.rpc("add_xp", { p_xp: safeXp });
+            if (xpErr) {
+                console.error("Erro ao somar XP no profile:", xpErr);
+            }
         }
 
         return partida;

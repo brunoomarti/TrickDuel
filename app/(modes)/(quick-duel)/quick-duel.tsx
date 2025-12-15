@@ -241,6 +241,7 @@ export default function QuickDuelScreen() {
                 questionId: current.id,
                 correct: params.correct,
                 timeLimit: current.timeLimit,
+                timeSpent: params.answerTime,
             })
         );
 

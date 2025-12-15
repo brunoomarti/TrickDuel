@@ -44,6 +44,14 @@ export default function QuickDuelFinalScreen() {
         return "draw";
     }, [totalCorrect, aiCorrect, totalTime, aiTime]);
 
+    const xpPotential = results.reduce((s, r) => s + (r.xpEarned ?? 0), 0);
+
+    const xpMultiplier =
+        winner === "player" ? 1.2 : winner === "draw" ? 0.6 : 0;
+
+    const xpGained =
+        winner === "ai" ? 0 : Math.max(0, Math.round(xpPotential * xpMultiplier));
+
     const resultLabel =
         winner === "player"
             ? "vitória"
@@ -107,6 +115,7 @@ export default function QuickDuelFinalScreen() {
                     userTimeTotal: totalTime,
                     aiTimeTotal: aiTime,
                     result: resultLabel,
+                    xpGained,
                 });
 
                 await notifyMatchFinished(winner);
@@ -210,7 +219,6 @@ export default function QuickDuelFinalScreen() {
                 backgroundColor: theme.background,
             }}
         >
-            {/* ===== HEADER ANIMADO ===== */}
             <Animated.View
                 style={{
                     height: headerHeight,
@@ -281,6 +289,10 @@ export default function QuickDuelFinalScreen() {
                         style={{ color: theme.textPrimary, lineHeight: 16 }}
                     >
                         Oponente: {aiCorrect} acertos em {aiTime.toFixed(1)}s
+                    </Text>
+
+                    <Text style={{ color: theme.textSecondary, marginTop: 6 }}>
+                        XP ganho: {xpGained > 0 ? `+${xpGained}` : "0"}
                     </Text>
                 </Animated.View>
             </Animated.View>

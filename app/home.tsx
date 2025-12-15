@@ -189,7 +189,7 @@ export default function HomeScreen() {
                 </AnimatedScrollView>
 
                 {profile && (
-                    <VStack className="pb-4 space-y-1">
+                    <VStack className="pb-6 pt-4 space-y-1">
                         <Text
                             className="text-center"
                             style={{ color: theme.accent }}
