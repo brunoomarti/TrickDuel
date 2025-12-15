@@ -68,7 +68,6 @@ export default function QuickDuelScreen() {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // THEME
     const scheme = useColorScheme();
     const theme = COLORS[scheme ?? "light"];
 
@@ -82,19 +81,16 @@ export default function QuickDuelScreen() {
     const [opponentSelectedId, setOpponentSelectedId] = useState<string | null>(null);
     const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
 
-    // ✅ FIX: ref pra evitar closure velha travando a IA
     const opponentSelectedIdRef = useRef<string | null>(null);
     useEffect(() => {
         opponentSelectedIdRef.current = opponentSelectedId;
     }, [opponentSelectedId]);
 
-    // evita finish duplicado
     const pendingFinishRef = useRef(false);
 
     const [lastAnswerCommitted, setLastAnswerCommitted] = useState(false);
     const aiResults = useSelector((state: RootState) => state.game.aiResults);
 
-    // reset de jogo ao entrar na tela
     useEffect(() => {
         dispatch(resetGame());
 
@@ -109,7 +105,6 @@ export default function QuickDuelScreen() {
         setPlayerHistory([]);
     }, [dispatch]);
 
-    // carrega usuário + perfil da IA
     useEffect(() => {
         supabase.auth
             .getUser()
@@ -135,7 +130,6 @@ export default function QuickDuelScreen() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const current = questions[currentIndex];
 
-    // ✅ FIX: ref pra sempre ter a pergunta “atual” dentro do callback da IA
     const currentRef = useRef<typeof current>(current);
     useEffect(() => {
         currentRef.current = current;
@@ -175,19 +169,15 @@ export default function QuickDuelScreen() {
 
     const difficulty = mapDifficulty(current?.dificuldade);
 
-    // mantém seu comportamento original: IA só “joga” quando pode mostrar respostas (memória)
     const iaEnabled =
         !!current &&
         started &&
         (current.tipo === "memoria" ? showAnswers : true);
 
-    // ✅ FIX: callback estável e imune a closure velha
     const handleAIAnswer = React.useCallback(
         ({ aiAnswer, aiCorrect, aiTime }: OnAIAnswerPayload) => {
-            // se já respondeu nessa pergunta, ignora
             if (opponentSelectedIdRef.current) return;
 
-            // trava via ref IMEDIATO (setState é async)
             opponentSelectedIdRef.current = aiAnswer.id;
             setOpponentSelectedId(aiAnswer.id);
 
@@ -255,11 +245,18 @@ export default function QuickDuelScreen() {
             answerTime: params.answerTime,
         });
 
+        try {
+            await supabase.rpc("bump_question_usage", {
+                p_question_id: current.id,
+            });
+        } catch (err) {
+            console.warn("Erro ao atualizar uso da pergunta:", err);
+        }
+
         const isLast = currentIndex === QUESTIONS_PER_MATCH - 1;
         if (isLast) setLastAnswerCommitted(true);
     };
 
-    // ✅ aqui é o timer REAL do seu projeto: ele retorna progress e chama callback no timeout
     const { progress } = useTimer(
         current?.timeLimit ?? 10,
         started,
@@ -319,7 +316,6 @@ export default function QuickDuelScreen() {
         }, [])
     );
 
-    // reset de seleção quando muda a questão
     useEffect(() => {
         setSelectedAnswerId(null);
         setOpponentSelectedId(null);
@@ -329,13 +325,11 @@ export default function QuickDuelScreen() {
         setLastAnswerCommitted(false);
     }, [currentIndex]);
 
-    // avança quando ambos (player + IA) selecionaram
     useEffect(() => {
         if (!selectedAnswerId || !opponentSelectedId) return;
 
         const isLast = currentIndex === QUESTIONS_PER_MATCH - 1;
 
-        // se for a última, só navega depois do commitFinish
         if (isLast && !lastAnswerCommitted) return;
 
         const t = setTimeout(() => {

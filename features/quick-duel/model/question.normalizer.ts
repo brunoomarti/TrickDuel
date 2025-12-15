@@ -4,12 +4,9 @@ import { Question, PerguntaAPI } from "./question.types";
 
 export function normalizeQuestions(
     perguntas: PerguntaAPI[],
-    limit: number,
     fallbackTime: number
 ): Question[] {
-    const selected = shuffleArray(perguntas).slice(0, limit);
-
-    return selected.map((p) => {
+    return perguntas.map((p) => {
         const rawHtml = p.enunciado?.html ?? null;
 
         return {
@@ -22,7 +19,6 @@ export function normalizeQuestions(
 
             tipo: p.tipo ?? "NORMAL",
             dica: p.dica ?? null,
-
             dificuldade: p.dificuldade ?? "facil",
 
             answers: shuffleArray(

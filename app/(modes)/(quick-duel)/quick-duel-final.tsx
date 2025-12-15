@@ -173,8 +173,6 @@ export default function QuickDuelFinalScreen() {
         extrapolate: "clamp",
     });
 
-    // ---------------- CORES DO RESULTADO ----------------
-
     type ResultBadge = {
         bg: string;
         border: string;
@@ -297,7 +295,6 @@ export default function QuickDuelFinalScreen() {
                 </Animated.View>
             </Animated.View>
 
-            {/* ===== SCROLL DO CONTEÚDO ===== */}
             <Animated.ScrollView
                 style={{
                     flex: 1,
@@ -380,7 +377,6 @@ export default function QuickDuelFinalScreen() {
                 </View>
             </Animated.ScrollView>
 
-            {/* ===== BOTÃO FIXO ===== */}
             <View
                 style={{
                     padding: 20,
