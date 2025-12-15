@@ -15,6 +15,7 @@ import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 
 import { PartidasList } from "@/components/ui/custom/partidas-list";
 import { QuickDuelCard } from "@/components/ui/custom/quick-duel-card";
@@ -25,6 +26,9 @@ import type { User } from "@supabase/supabase-js";
 
 import { BackHandler } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+
+import { MaterialIcons } from "@expo/vector-icons";
+import { Pressable } from "react-native";
 
 type Profile = {
     id: string;
@@ -46,6 +50,11 @@ export default function HomeScreen() {
     const [profile, setProfile] = useState<Profile | null>(null);
 
     const scrollY = useRef(new Animated.Value(0)).current;
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.replace("/(auth)/login");
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -84,13 +93,13 @@ export default function HomeScreen() {
 
     const headerHeight = scrollY.interpolate({
         inputRange: [0, 80],
-        outputRange: [130, 80],
+        outputRange: [140, 90],
         extrapolate: "clamp",
     });
 
     const headerPaddingTop = scrollY.interpolate({
         inputRange: [0, 80],
-        outputRange: [42, 22],
+        outputRange: [56, 42],
         extrapolate: "clamp",
     });
 
@@ -131,7 +140,7 @@ export default function HomeScreen() {
         >
             <VStack className="flex-1">
                 <AnimatedHStack
-                    className="w-full flex-row items-center justify-between"
+                    className="w-full relative"
                     style={[
                         {
                             height: headerHeight,
@@ -150,12 +159,10 @@ export default function HomeScreen() {
                         },
                     ]}
                 >
-                    <Box className="w-10 h-10" />
-
-                    <Center className="flex-1 h-full items-center justify-center">
+                    <Center className="absolute inset-0 items-center justify-center">
                         <AnimatedImage
                             source={require("@/assets/images/titulo_logo.png")}
-                            className="h-full w-2/3"
+                            className="h-full w-2/4"
                             alt="AltLogo"
                             resizeMode="contain"
                             style={{
@@ -164,8 +171,17 @@ export default function HomeScreen() {
                         />
                     </Center>
 
-                    <Box className="w-10 h-10" />
+                    <Box className="absolute right-6 top-0 bottom-0 justify-center">
+                        <Button
+                            onPress={handleLogout}
+                            className="h-8 w-10 rounded-xl p-0 items-center justify-center bg-red-600 active:bg-red-700"
+                        >
+                            <MaterialIcons name="logout" size={18} color="#fff" />
+                        </Button>
+                    </Box>
+
                 </AnimatedHStack>
+
 
                 <AnimatedScrollView
                     style={{ flex: 1 }}
